@@ -3,7 +3,7 @@
 # (https://github.com/apps/settings); otherwise this documents the intended
 # About metadata. The live values are also set via `gh repo edit`.
 repository:
-  name: next-url-shortener
+  name: cut
   description: "Cut — a tiny, self-hosted URL shortener on Next.js. Owner-only admin with password-protected, expiring, and click-capped links. One-click deploy to Vercel or Cloudflare, with native storage on each (Upstash Redis / Workers KV)."
   homepage: https://s.mendy-landa.dev
   topics: url-shortener, link-shortener, nextjs, react, typescript, tailwindcss, vercel, cloudflare, cloudflare-workers, workers-kv, opennext, upstash, redis, serverless, self-hosted
