@@ -16,8 +16,9 @@ catalog listings live in the upstream repos below.
   password).
 - `svgs/cut.svg` — the logo.
 
-Submitted to [`coollabsio/coolify`](https://github.com/coollabsio/coolify) as
-`templates/compose/cut.yaml` + `templates/compose/svgs/cut.svg`.
+Submitted to [`coollabsio/coolify`](https://github.com/coollabsio/coolify)
+(default branch `v4.x`) as `templates/compose/cut.yaml` + `public/svgs/cut.svg`
+(the template's `logo: svgs/cut.svg` resolves under `public/`).
 See <https://coolify.io/docs/get-started/contribute/service>.
 
 ## `dokploy/`
