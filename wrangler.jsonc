@@ -15,8 +15,15 @@
       "binding": "WORKER_SELF_REFERENCE",
       "service": "cut"
     }
+  ],
+  // Native storage. No "id" → the deploy button (and `wrangler dev`) auto-create
+  // the namespace and fill it in. Cut reads this binding via getCloudflareContext.
+  "kv_namespaces": [
+    {
+      "binding": "CUT_KV"
+    }
   ]
-  // Secrets (ADMIN_PASSWORD, UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN,
-  // CRON_SECRET) are NOT stored here — the deploy button prompts for them from
-  // .dev.vars.example, and locally you set them with `wrangler secret put`.
+  // The only secret needed on Cloudflare is ADMIN_PASSWORD (plus optional
+  // CRON_SECRET) — the deploy button prompts for them from .dev.vars.example.
+  // No Upstash here: storage is the native KV namespace above.
 }

@@ -1,15 +1,14 @@
 # Secrets for Cloudflare Workers. The "Deploy to Cloudflare" button reads this
 # file and prompts for each value during setup. For local Workers preview
 # (`pnpm preview`), copy this to `.dev.vars` and fill it in.
+#
+# Storage is the native KV namespace (CUT_KV in wrangler.jsonc) — no database
+# credentials needed here.
 
 # Password required to add/delete links in /admin. Pick something strong.
 ADMIN_PASSWORD=
 
-# Upstash Redis REST credentials. Create a database at https://upstash.com,
-# then copy the REST URL + token from its console.
-UPSTASH_REDIS_REST_URL=
-UPSTASH_REDIS_REST_TOKEN=
-
 # Optional: protects the /api/keepalive endpoint. If set, callers must send it
-# as a Bearer token.
+# as a Bearer token. (Keepalive isn't actually needed on Cloudflare — KV never
+# archives — but the endpoint still works if you want it.)
 CRON_SECRET=

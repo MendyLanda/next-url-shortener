@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { ShieldAlert, LogOut, CircleAlert } from "lucide-react";
 import { isAuthed, isConfigured } from "@/lib/auth";
-import { listLinks } from "@/lib/redis";
+import { listLinks } from "@/lib/store";
 import { loginAction, logoutAction } from "../actions";
 import { Wordmark } from "@/components/wordmark";
 import { LinkForm } from "@/components/link-form";

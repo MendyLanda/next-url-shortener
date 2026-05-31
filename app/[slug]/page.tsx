@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { Lock, Clock, Ban, ShieldAlert } from "lucide-react";
-import { getLink, getClicks, linkStatus, consumeClick } from "@/lib/redis";
+import { getLink, getClicks, linkStatus, consumeClick } from "@/lib/store";
 import { Wordmark } from "@/components/wordmark";
 import { UnlockForm } from "@/components/unlock-form";
 

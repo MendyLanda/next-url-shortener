@@ -1,13 +1,12 @@
-import { redis } from "@/lib/redis";
+import { getStore } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Keeps the Upstash free-tier database from being archived.
- *
- * Upstash archives free databases after ~14 days of inactivity, and a PING does
- * NOT count — only real data commands do. So we run an actual SET. Invoked daily
- * by a Vercel Cron (see vercel.json); also hittable manually for testing.
+ * Keeps the storage backend warm. Upstash archives free databases after ~14
+ * days of inactivity (and a PING doesn't count), so we run a real write. On
+ * Vercel a daily Cron hits this (see vercel.json). Cloudflare KV doesn't archive
+ * on inactivity, so this is just a harmless heartbeat there.
  */
 export async function GET(req: Request) {
   // When CRON_SECRET is set, Vercel attaches it as a Bearer token to cron
@@ -17,8 +16,6 @@ export async function GET(req: Request) {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const ranAt = new Date().toISOString();
-  await redis.set("__keepalive", ranAt); // a real write — counts as activity
-
-  return Response.json({ ok: true, ranAt });
+  await (await getStore()).touch(); // a real write — counts as activity
+  return Response.json({ ok: true });
 }

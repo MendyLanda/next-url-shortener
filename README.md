@@ -1,9 +1,10 @@
 # Cut ✂️
 
 **Cut** is a tiny, self-hosted URL shortener — short links that are entirely
-yours. One-click deploy to Vercel, data in [Upstash Redis](https://upstash.com)
-(via the Vercel Marketplace), and an owner-only admin protected by a single
-password.
+yours. One-click deploy to **Vercel** or **Cloudflare**, an owner-only admin
+protected by a single password, and storage that's native to whichever host you
+pick: **Cloudflare KV** on Cloudflare, **[Upstash Redis](https://upstash.com)**
+on Vercel.
 
 - `/[slug]` → redirect to the destination (and counts the click)
 - `/admin` → password-protected dashboard to add, copy, edit, and delete links
@@ -20,6 +21,9 @@ password.
 - Owner sign-in is **rate-limited** with layered windows (2/min, 5/hour, 10/day per IP);
   link-password guesses get 2× those limits (4/min, 10/hour, 20/day)
 - Passwords (owner + per-link) are stored only as SHA-256 hashes, never plaintext
+- On Redis (Vercel), click caps and rate-limit counters are atomic/exact. On
+  Cloudflare KV (eventually consistent, no atomic increment) they're best-effort
+  — plenty for a personal shortener, just not exact under heavy concurrency.
 
 ## Deploy
 
@@ -46,24 +50,20 @@ If the storage step doesn't appear, just open your project → **Storage** →
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/MendyLanda/next-url-shortener)
 
 Cloudflare builds Cut with the [OpenNext adapter](https://opennext.js.org/cloudflare)
-(`@opennextjs/cloudflare`) — configured in `wrangler.jsonc`, `open-next.config.ts`,
-and the `deploy` script. There's no Marketplace database here, so set up Upstash
-first:
+(`@opennextjs/cloudflare`) and stores data in **native [Workers KV](https://developers.cloudflare.com/kv/)** —
+no external database to set up:
 
-1. Create a free database at [upstash.com](https://upstash.com) and copy its
-   **REST URL** and **REST token**.
-2. Click the button. Cloudflare reads `.dev.vars.example` and prompts you for the
-   secrets — paste `ADMIN_PASSWORD`, `UPSTASH_REDIS_REST_URL`, and
-   `UPSTASH_REDIS_REST_TOKEN` (`CRON_SECRET` is optional).
+1. Click the button. Cloudflare reads `wrangler.jsonc` and **auto-provisions the
+   `CUT_KV` namespace** for you (the binding has no `id`, so a fresh one is
+   created on deploy).
+2. It prompts for secrets from `.dev.vars.example` — just paste a strong
+   `ADMIN_PASSWORD` (`CRON_SECRET` is optional and not really needed here).
 3. Cloudflare builds and deploys. Your links go live at
    `https://cut.<your-subdomain>.workers.dev` — add a custom domain from the
    Worker's **Settings → Domains & Routes**.
 
-> **Keepalive on Cloudflare:** the `vercel.json` cron only runs on Vercel. Upstash
-> still archives idle free databases on any host, so schedule a daily GET to
-> `/api/keepalive` another way — e.g. a Cloudflare [Cron Trigger](https://developers.cloudflare.com/workers/configuration/cron-triggers/)
-> worker or a free pinger like [cron-job.org](https://cron-job.org). Set
-> `CRON_SECRET` to lock the endpoint down.
+No keepalive cron is needed on Cloudflare — KV doesn't archive idle namespaces
+(that's an Upstash free-tier concern, handled by `vercel.json` on Vercel).
 
 ### Custom domain (any host)
 
@@ -94,25 +94,28 @@ it on `workerd`).
 
 ## How it works
 
-- **Storage** — a Redis hash `links` maps `slug → {url, password, expiry, click
-  limit, …}` (JSON); a `clicks` hash tracks per-slug counts via atomic `HINCRBY`
-  so click limits are race-safe. See `lib/redis.ts`.
+- **Storage** — the app talks to one `Store` interface (`lib/store/`) with a
+  backend per host, picked at runtime: native **Cloudflare KV** on Workers,
+  **Upstash Redis** everywhere else. Links live at `l:<slug>` (JSON) and click
+  counts at `c:<slug>`. Adding a host later (e.g. a Redis-over-TCP backend for
+  Railway) is a new file implementing the same interface — nothing else changes.
 - **Auth** — `ADMIN_PASSWORD` only. Signing in sets an httpOnly cookie holding a
   SHA-256 hash of the password (never the password itself). See `lib/auth.ts`.
-- **Rate limiting** — `@upstash/ratelimit` throttles owner sign-in and per-link
-  password guesses, failing open if Redis is unreachable. See `lib/ratelimit.ts`.
+- **Rate limiting** — a small layered fixed-window limiter (`lib/ratelimit.ts`)
+  built on the store's `incr` primitive, so it works on both Redis and KV. It
+  throttles owner sign-in and per-link password guesses, failing open if the
+  store is unreachable.
 - **Actions** — create/delete/login/logout/unlock are Next.js Server Actions in
   `app/actions.ts`; no API routes to wire up.
-- **Keepalive** — Upstash archives free-tier databases after ~14 days of
-  inactivity (and a PING doesn't count). `/api/keepalive` runs a real `SET` to
-  keep it alive forever. On Vercel a daily [Cron](https://vercel.com/docs/cron-jobs)
-  (`vercel.json`) hits it automatically; on other hosts schedule it yourself (see
-  the Cloudflare deploy note above). Set the optional `CRON_SECRET` env var to
-  lock the endpoint down.
 - **Cloudflare** — runs through the [OpenNext adapter](https://opennext.js.org/cloudflare):
   `next build` output is repackaged into a Worker by `opennextjs-cloudflare`
-  (see `wrangler.jsonc` + `open-next.config.ts`). All pages are dynamic and data
-  is HTTP-only (Upstash REST), so no R2/KV bindings are needed.
+  (see `wrangler.jsonc` + `open-next.config.ts`), reading the `CUT_KV` binding
+  via `getCloudflareContext`.
+- **Keepalive** — Upstash archives free-tier databases after ~14 days of
+  inactivity (a PING doesn't count), so `/api/keepalive` does a real write. On
+  Vercel a daily [Cron](https://vercel.com/docs/cron-jobs) (`vercel.json`) hits
+  it automatically. Cloudflare KV doesn't archive, so it's a harmless no-op
+  there. Set the optional `CRON_SECRET` env var to lock the endpoint down.
 
 That's the whole thing.
 
