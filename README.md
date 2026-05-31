@@ -56,8 +56,9 @@ no external database to set up:
 1. Click the button. Cloudflare reads `wrangler.jsonc` and **auto-provisions the
    `CUT_KV` namespace** for you (the binding has no `id`, so a fresh one is
    created on deploy).
-2. It prompts for secrets from `.dev.vars.example` — just paste a strong
-   `ADMIN_PASSWORD` (`CRON_SECRET` is optional and not really needed here).
+2. It prompts for the one secret in `.dev.vars.example` — a strong
+   `ADMIN_PASSWORD`. (No database creds, no cron secret: KV is a native binding
+   and never archives, so there's no keepalive cron on Cloudflare.)
 3. Cloudflare builds and deploys. Your links go live at
    `https://cut.<your-subdomain>.workers.dev` — add a custom domain from the
    Worker's **Settings → Domains & Routes**.

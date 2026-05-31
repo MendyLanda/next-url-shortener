@@ -6,9 +6,6 @@
 # credentials needed here.
 
 # Password required to add/delete links in /admin. Pick something strong.
+# (This is the only secret Cloudflare needs — no database creds, no cron secret:
+# KV is a native binding and never archives, so there's no keepalive cron here.)
 ADMIN_PASSWORD=
-
-# Optional: protects the /api/keepalive endpoint. If set, callers must send it
-# as a Bearer token. (Keepalive isn't actually needed on Cloudflare — KV never
-# archives — but the endpoint still works if you want it.)
-CRON_SECRET=
