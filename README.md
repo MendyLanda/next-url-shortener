@@ -59,5 +59,11 @@ Open <http://localhost:3000/admin>, sign in with `ADMIN_PASSWORD`, and add a lin
   password guesses, failing open if Redis is unreachable. See `lib/ratelimit.ts`.
 - **Actions** — create/delete/login/logout/unlock are Next.js Server Actions in
   `app/actions.ts`; no API routes to wire up.
+- **Keepalive** — Upstash archives free-tier databases after ~14 days of
+  inactivity (and a PING doesn't count). A daily [Vercel Cron](https://vercel.com/docs/cron-jobs)
+  (`vercel.json`) hits `/api/keepalive`, which runs a real `SET` to keep it
+  alive forever. Set the optional `CRON_SECRET` env var to lock the endpoint
+  down. Note: Vercel Cron only runs on **production** deployments, and the
+  Hobby plan runs crons once per day — which is well under the 14-day window.
 
 That's the whole thing.
