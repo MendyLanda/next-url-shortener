@@ -13,6 +13,7 @@ import {
 } from "@/lib/store";
 import { isAuthed, signIn, signOut, hashPassword } from "@/lib/auth";
 import { allowLoginAttempt, allowUnlockAttempt } from "@/lib/ratelimit";
+import { log } from "@/lib/log";
 
 // Paths that must never be used as a slug (they are real routes).
 const RESERVED = new Set(["admin", "api", "_next", "favicon.ico"]);
@@ -33,14 +34,21 @@ async function clientIp(): Promise<string> {
 }
 
 export async function loginAction(formData: FormData) {
-  if (!(await allowLoginAttempt(await clientIp()))) redirect("/admin?error=ratelimited");
+  const ip = await clientIp();
+  if (!(await allowLoginAttempt(ip))) {
+    log.warn("login.ratelimited", { ip });
+    redirect("/admin?error=ratelimited");
+  }
   const password = String(formData.get("password") ?? "");
   const ok = await signIn(password);
+  if (ok) log.info("login.success", { ip });
+  else log.warn("login.failed", { ip });
   redirect(ok ? "/admin" : "/admin?error=invalid");
 }
 
 export async function logoutAction() {
   await signOut();
+  log.info("logout", { ip: await clientIp() });
   redirect("/admin");
 }
 
@@ -54,7 +62,10 @@ export async function createLinkAction(
   _prev: CreateState,
   formData: FormData,
 ): Promise<CreateState> {
-  if (!(await isAuthed())) return { ok: false, error: "Not signed in." };
+  if (!(await isAuthed())) {
+    log.warn("link.create.denied", { ip: await clientIp() });
+    return { ok: false, error: "Not signed in." };
+  }
 
   let url = String(formData.get("url") ?? "").trim();
   let slug = String(formData.get("slug") ?? "")
@@ -99,8 +110,25 @@ export async function createLinkAction(
   };
 
   await store.putLink(slug, record);
+  log.info("link.create", {
+    slug,
+    dest: safeHost(url),
+    protected: Boolean(record.passwordHash),
+    expires: Boolean(record.expiresAt),
+    cap: record.maxClicks ?? undefined,
+    ip: await clientIp(),
+  });
   revalidatePath("/admin");
   return { ok: true, slug };
+}
+
+/** Host of a URL for logs (never the full path/query). "?" if unparseable. */
+function safeHost(url: string): string {
+  try {
+    return new URL(url).host;
+  } catch {
+    return "?";
+  }
 }
 
 // The client sends `expiresAt` as an absolute epoch (ms) so the value is
@@ -138,7 +166,10 @@ export async function editLinkAction(
   _prev: CreateState,
   formData: FormData,
 ): Promise<CreateState> {
-  if (!(await isAuthed())) return { ok: false, error: "Not signed in." };
+  if (!(await isAuthed())) {
+    log.warn("link.edit.denied", { ip: await clientIp() });
+    return { ok: false, error: "Not signed in." };
+  }
 
   const originalSlug = String(formData.get("originalSlug") ?? "").trim();
   const rec = originalSlug ? await getLink(originalSlug) : null;
@@ -192,13 +223,20 @@ export async function editLinkAction(
     await store.resetClicks(slug);
   }
 
+  log.info("link.edit", { slug, from: renamed ? originalSlug : undefined, dest: safeHost(parsedUrl.value) });
   revalidatePath("/admin");
   return { ok: true, slug };
 }
 
 export async function deleteLinkAction(slug: string) {
-  if (!(await isAuthed())) return;
-  if (slug) await (await getStore()).deleteLink(slug);
+  if (!(await isAuthed())) {
+    log.warn("link.delete.denied", { slug, ip: await clientIp() });
+    return;
+  }
+  if (slug) {
+    await (await getStore()).deleteLink(slug);
+    log.info("link.delete", { slug });
+  }
   // Revalidate but don't redirect: the caller hides the row optimistically so
   // the deletion is visible immediately even on eventually-consistent KV, where
   // an immediate re-read could still return the just-deleted link.
@@ -209,8 +247,10 @@ export async function deleteLinkAction(slug: string) {
 export async function unlockAction(formData: FormData) {
   const slug = String(formData.get("slug") ?? "");
   const password = String(formData.get("password") ?? "");
+  const ip = await clientIp();
 
-  if (!(await allowUnlockAttempt(await clientIp(), slug))) {
+  if (!(await allowUnlockAttempt(ip, slug))) {
+    log.warn("unlock.ratelimited", { slug, ip });
     redirect(`/${slug}?error=ratelimited`);
   }
 
@@ -220,9 +260,11 @@ export async function unlockAction(formData: FormData) {
   if (linkStatus(rec, await getClicks(slug)) !== "active") redirect(`/${slug}`);
 
   if (!rec.passwordHash || rec.passwordHash !== hashPassword(password)) {
+    log.warn("unlock.failed", { slug, ip });
     redirect(`/${slug}?error=invalid`);
   }
 
   if (!(await consumeClick(slug, rec))) redirect(`/${slug}`);
+  log.info("unlock.success", { slug, ip });
   redirect(rec.url);
 }
