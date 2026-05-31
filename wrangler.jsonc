@@ -1,0 +1,22 @@
+{
+  // Cloudflare Workers config, read by the OpenNext adapter and the
+  // "Deploy to Cloudflare" button. See https://opennext.js.org/cloudflare.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cut",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2024-12-30",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "cut"
+    }
+  ]
+  // Secrets (ADMIN_PASSWORD, UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN,
+  // CRON_SECRET) are NOT stored here — the deploy button prompts for them from
+  // .dev.vars.example, and locally you set them with `wrangler secret put`.
+}

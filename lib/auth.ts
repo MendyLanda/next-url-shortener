@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { createHash } from "crypto";
+import { createHash } from "node:crypto";
 
 const COOKIE = "auth";
 

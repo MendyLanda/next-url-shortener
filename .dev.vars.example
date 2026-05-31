@@ -1,0 +1,15 @@
+# Secrets for Cloudflare Workers. The "Deploy to Cloudflare" button reads this
+# file and prompts for each value during setup. For local Workers preview
+# (`pnpm preview`), copy this to `.dev.vars` and fill it in.
+
+# Password required to add/delete links in /admin. Pick something strong.
+ADMIN_PASSWORD=
+
+# Upstash Redis REST credentials. Create a database at https://upstash.com,
+# then copy the REST URL + token from its console.
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=
+
+# Optional: protects the /api/keepalive endpoint. If set, callers must send it
+# as a Bearer token.
+CRON_SECRET=
