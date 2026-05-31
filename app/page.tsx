@@ -23,7 +23,7 @@ export default function Home() {
           href="https://s.mendy-landa.dev/next-url-shortener-home-link"
           className="underline underline-offset-2 hover:text-zinc-600 dark:hover:text-zinc-200"
         >
-          Mendy
+          Mendy Landa
         </a>
       </p>
     </main>
