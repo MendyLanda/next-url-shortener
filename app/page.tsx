@@ -19,7 +19,7 @@ export default function Home() {
       <section className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center px-6 py-20 text-center">
         <div className="animate-rise">
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-accent">
-            self-hosted · upstash redis
+            self-hosted · entirely yours
           </p>
           <h1 className="mt-4 font-display text-5xl italic leading-[1.05] tracking-tight sm:text-6xl">
             Cut your links

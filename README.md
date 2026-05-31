@@ -11,13 +11,16 @@ Owner-only admin, protected by a single password. Deploy it anywhere in one clic
   <a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FMendyLanda%2Fcut&project-name=cut&repository-name=cut&env=ADMIN_PASSWORD&envDescription=Password%20to%20protect%20the%20admin%20page&envLink=https%3A%2F%2Fgithub.com%2FMendyLanda%2Fcut%23local-development&stores=%5B%7B%22type%22%3A%22integration%22%2C%22integrationSlug%22%3A%22upstash%22%2C%22productSlug%22%3A%22upstash-kv%22%2C%22protocol%22%3A%22storage%22%7D%5D"><img alt="Deploy with Vercel" src="https://vercel.com/button" height="32"></a>
   &nbsp;
   <a href="https://deploy.workers.cloudflare.com/?url=https://github.com/MendyLanda/cut"><img alt="Deploy to Cloudflare" src="https://deploy.workers.cloudflare.com/button" height="32"></a>
+  &nbsp;
+  <a href="https://railway.com/deploy/PZZYdc?referralCode=IeJ9uX&utm_medium=integration&utm_source=template&utm_campaign=generic"><img alt="Deploy on Railway" src="https://railway.com/button.svg" height="32"></a>
 </p>
 
 </div>
 
 Each host uses its **native** storage, so there's nothing extra to wire up —
 **[Upstash Redis](https://upstash.com)** on Vercel, **[Workers KV](https://developers.cloudflare.com/kv/)**
-on Cloudflare. _(Railway and more are on the way.)_
+on Cloudflare, and a **managed [Redis](https://redis.io)** on Railway (or any
+host you point a `REDIS_URL` at).
 
 ## What you get
 
@@ -36,9 +39,9 @@ on Cloudflare. _(Railway and more are on the way.)_
 - Owner sign-in is **rate-limited** with layered windows (2/min, 5/hour, 10/day
   per IP); link-password guesses get 2× those limits (4/min, 10/hour, 20/day).
 - Passwords (owner + per-link) are stored only as SHA-256 hashes, never plaintext.
-- Click caps and rate-limit counters are atomic/exact on Redis (Vercel), and
-  best-effort on Cloudflare KV (eventually consistent, no atomic increment) —
-  plenty for a personal shortener, just not exact under heavy concurrency.
+- Click caps and rate-limit counters are atomic/exact on Redis (Vercel +
+  Railway), and best-effort on Cloudflare KV (eventually consistent, no atomic
+  increment) — plenty for a personal shortener, just not exact under heavy concurrency.
 
 ## Deploy
 
@@ -88,6 +91,28 @@ Click **Deploy to Cloudflare** above. Cut builds with the
 </details>
 
 <details>
+<summary><b>▸ Railway</b> &nbsp;·&nbsp; storage: managed Redis (provisioned with the app)</summary>
+
+<br>
+
+Click **Deploy on Railway** above. The template spins up two services, wired
+together for you:
+
+1. **The Cut app** builds straight from this repo — Railway's Nixpacks detects
+   Next.js + pnpm, so there's no Dockerfile, and `next start` listens on `$PORT`.
+2. **A Redis database** is provisioned alongside it. Its connection string is
+   handed to the app as a `REDIS_URL` reference variable, and Cut auto-selects
+   its Redis-over-TCP backend (`lib/store/redis.ts`) whenever `REDIS_URL` is set.
+3. **Set one variable** — a strong `ADMIN_PASSWORD` (prompted during deploy).
+   That's it: no external accounts, and no `CRON_SECRET`, because self-hosted
+   Redis doesn't archive so there's no keepalive cron here.
+
+Your links go live at `https://<service>.up.railway.app`. The same `REDIS_URL`
+wiring works on **Render**, **Fly.io**, or a plain VPS — point it at any Redis.
+
+</details>
+
+<details>
 <summary><b>▸ Custom domain</b> &nbsp;·&nbsp; any host</summary>
 
 <br>
@@ -114,8 +139,9 @@ pnpm dev
 
 Pull the Upstash credentials from your Vercel project with
 `vercel env pull .env.local`, or copy the REST URL/token from the Upstash console.
-Then open <http://localhost:3000/admin>, sign in with `ADMIN_PASSWORD`, and add a
-link.
+Prefer a local server instead? Run Redis (`docker run -p 6379:6379 redis`) and set
+`REDIS_URL=redis://localhost:6379` — Cut uses it whenever it's present. Then open
+<http://localhost:3000/admin>, sign in with `ADMIN_PASSWORD`, and add a link.
 
 To exercise the **Cloudflare Workers** build locally, copy `.dev.vars.example` to
 `.dev.vars`, fill it in, and run `pnpm preview` (builds with OpenNext and serves
@@ -130,10 +156,10 @@ it on `workerd`).
 
 - **Storage** — the app talks to one `Store` interface (`lib/store/`) with a
   backend chosen per host at runtime: native **Cloudflare KV** on Workers,
-  **Upstash Redis** everywhere else. Links live at `l:<slug>` (JSON) and click
-  counts at `c:<slug>`. Adding a host later (e.g. a Redis-over-TCP backend for
-  Railway) is just a new file implementing the same interface — nothing else
-  changes.
+  **Redis over TCP** when `REDIS_URL` is set (Railway / Render / Fly / VPS), and
+  **Upstash Redis** over REST otherwise. Each keeps links and click counts under
+  its own key layout; adding another host is just a new file implementing the
+  same interface — nothing else changes.
 - **Auth** — `ADMIN_PASSWORD` only. Signing in sets an httpOnly cookie holding a
   SHA-256 hash of the password (never the password itself). See `lib/auth.ts`.
 - **Rate limiting** — a small layered fixed-window limiter (`lib/ratelimit.ts`)
@@ -148,8 +174,8 @@ it on `workerd`).
   via `getCloudflareContext`.
 - **Keepalive** — `/api/keepalive` does a real write so idle Upstash free
   databases aren't archived (~14 days; a PING doesn't count). On Vercel a daily
-  [Cron](https://vercel.com/docs/cron-jobs) hits it; on Cloudflare it's a
-  harmless no-op (KV doesn't archive).
+  [Cron](https://vercel.com/docs/cron-jobs) hits it; on Cloudflare KV and
+  self-hosted Redis it's a harmless no-op (neither archives).
 
 </details>
 

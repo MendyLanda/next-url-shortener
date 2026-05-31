@@ -1,13 +1,13 @@
 import type { LinkRecord, LinkWithMeta } from "../links";
 
-export type StoreKind = "cloudflare-kv" | "upstash";
+export type StoreKind = "cloudflare-kv" | "upstash" | "redis";
 
 /**
  * Storage backend contract. Cut talks to this interface only, so the same app
  * runs on any host with a native store:
- *   - Cloudflare Workers → native KV          (lib/store/cloudflare-kv.ts)
- *   - Vercel / Node      → Upstash Redis (REST) (lib/store/upstash.ts)
- *   - Railway (future)   → Redis over TCP        (drop in a new RedisStore here)
+ *   - Cloudflare Workers       → native KV           (lib/store/cloudflare-kv.ts)
+ *   - Vercel / Node            → Upstash Redis (REST) (lib/store/upstash.ts)
+ *   - Railway / Render / Fly   → Redis over TCP       (lib/store/redis.ts)
  *
  * Two operations are inherently backend-sensitive:
  *   - `consumeClick` is exact (atomic) on Redis; best-effort on KV (no atomic
