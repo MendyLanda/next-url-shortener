@@ -31,6 +31,16 @@ During the deploy flow Vercel will:
    `KV_REST_API_TOKEN`, since the Marketplace Redis product descends from the
    legacy Vercel KV slug). `lib/redis.ts` reads both the `UPSTASH_*` and `KV_*`
    names, so either set works with no code changes.
+3. **(Optional) Link a custom short domain.** A shortener is nicer on a tidy
+   domain like `s.example.com`. After the first deploy:
+   1. Open your project → **Settings → Domains → Add**, and enter the domain
+      (e.g. `s.example.com`).
+   2. Add the DNS record Vercel shows you at your registrar — usually a
+      **CNAME** for a subdomain (`s` → `cname.vercel-dns.com`), or an **A**
+      record for an apex/root domain. Vercel provisions HTTPS automatically.
+   3. Once it verifies, your links live at `https://s.example.com/<slug>`. The
+      app reads the request host at runtime, so the admin dashboard and copy
+      buttons start using the new domain with **no redeploy or config change**.
 
 If the storage step doesn't appear, just open your project → **Storage** →
 **Add → Upstash → Redis** after the first deploy, then redeploy.
