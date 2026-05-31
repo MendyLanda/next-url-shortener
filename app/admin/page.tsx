@@ -7,6 +7,7 @@ export const dynamic = "force-dynamic";
 
 const ERRORS: Record<string, string> = {
   invalid: "Wrong password.",
+  ratelimited: "Too many attempts. Wait a minute and try again.",
   url: "Enter a valid URL.",
   slug: "Slug can only contain letters, numbers and dashes.",
   exists: "That slug is already taken.",

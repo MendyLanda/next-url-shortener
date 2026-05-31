@@ -2,8 +2,10 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redis, LINKS_KEY, CLICKS_KEY } from "@/lib/redis";
 import { isAuthed, signIn, signOut } from "@/lib/auth";
+import { allowLoginAttempt } from "@/lib/ratelimit";
 
 // Paths that must never be used as a slug (they are real routes).
 const RESERVED = new Set(["admin", "api", "_next", "favicon.ico"]);
@@ -19,6 +21,11 @@ function randomSlug(len = 6): string {
 }
 
 export async function loginAction(formData: FormData) {
+  const h = await headers();
+  const ip =
+    h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "anonymous";
+  if (!(await allowLoginAttempt(ip))) redirect("/admin?error=ratelimited");
+
   const password = String(formData.get("password") ?? "");
   const ok = await signIn(password);
   redirect(ok ? "/admin" : "/admin?error=invalid");
