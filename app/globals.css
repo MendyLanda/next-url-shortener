@@ -90,5 +90,48 @@ body {
 }
 
 .animate-rise {
-  animation: rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Blinking caret in the hero demo's short link. */
+@keyframes blink {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  55%,
+  100% {
+    opacity: 0;
+  }
+}
+.animate-blink {
+  animation: blink 1.15s steps(1, end) infinite;
+}
+
+/* The hero demo card drifts gently so the page never feels fully static. */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+.animate-float {
+  animation: float 7s ease-in-out infinite;
+}
+
+/* A slow diagonal light sweep across the demo card. */
+@keyframes sheen {
+  0% {
+    transform: translateX(-130%) skewX(-12deg);
+  }
+  55%,
+  100% {
+    transform: translateX(240%) skewX(-12deg);
+  }
+}
+.animate-sheen {
+  animation: sheen 5s ease-in-out infinite;
 }

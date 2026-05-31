@@ -21,8 +21,9 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Cut — a tiny URL shortener",
-  description: "A tiny self-hosted URL shortener on Next.js + Upstash Redis.",
+  title: "Cut — a tiny, self-hosted URL shortener",
+  description:
+    "A tiny URL shortener you run yourself. Owner-only admin, with per-link passwords, expiries, and click limits. Deploy it anywhere — Vercel, Cloudflare, Railway, Render, Coolify, Dokploy, or Docker.",
 };
 
 export default function RootLayout({
