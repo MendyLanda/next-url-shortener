@@ -20,9 +20,14 @@ export default async function AdminPage({
   const configured = isConfigured();
   const authed = await isAuthed();
 
+  // Behind a reverse proxy the real public host/scheme arrive in the
+  // x-forwarded-* headers; the plain Host is the internal upstream. Prefer the
+  // forwarded values so the slug prefix and copy links use the real domain.
   const h = await headers();
-  const host = h.get("host") ?? "localhost:3000";
-  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
+  const proto =
+    h.get("x-forwarded-proto")?.split(",")[0].trim() ??
+    (host.startsWith("localhost") ? "http" : "https");
   const base = `${proto}://${host}`;
 
   return (

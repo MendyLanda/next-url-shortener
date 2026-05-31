@@ -1,7 +1,18 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { createHash } from "node:crypto";
 
 const COOKIE = "auth";
+
+// True when the request reached us over HTTPS — directly or via a TLS-terminating
+// reverse proxy (Traefik/nginx/Caddy), which forward the original scheme in
+// `x-forwarded-proto`. We can't key the cookie's Secure flag off NODE_ENV: a
+// production image served over plain HTTP (common for self-hosted/LAN setups)
+// would set Secure, and the browser would silently drop the cookie — so sign-in
+// would never stick.
+async function isHttps(): Promise<boolean> {
+  const proto = (await headers()).get("x-forwarded-proto");
+  return proto?.split(",")[0].trim() === "https";
+}
 
 // The cookie never stores the password itself — only a hash of it. On every
 // request we recompute the hash from ADMIN_PASSWORD and compare.
@@ -24,7 +35,7 @@ export async function signIn(password: string): Promise<boolean> {
   const store = await cookies();
   store.set(COOKIE, token(), {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: await isHttps(),
     sameSite: "lax",
     path: "/",
     maxAge: 60 * 60 * 24 * 30, // 30 days
