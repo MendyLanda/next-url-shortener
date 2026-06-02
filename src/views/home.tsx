@@ -9,11 +9,17 @@ import {
   ShieldCheck,
   KeyRound,
   Gauge,
-  Database,
-  Cloud,
-  Container,
   GitHubMark,
 } from "./icons.js";
+import {
+  Vercel,
+  Cloudflare,
+  Railway,
+  Render,
+  Docker,
+  Coolify,
+  Dokploy,
+} from "./logos.js";
 import { Wordmark } from "./wordmark.js";
 import { REPO_LINK } from "../../lib/constants.js";
 
@@ -157,13 +163,13 @@ function Chip({ icon, children }: { icon: Child; children: Child }) {
 /* ───────────────────────── Deploy anywhere ──────────────────────── */
 
 const HOSTS: { name: string; store: string; icon: Child }[] = [
-  { name: "Vercel", store: "Upstash Redis", icon: <Database size={15} /> },
-  { name: "Cloudflare", store: "Workers KV", icon: <Cloud size={15} /> },
-  { name: "Railway", store: "Managed Redis", icon: <Database size={15} /> },
-  { name: "Render", store: "Key Value", icon: <Database size={15} /> },
-  { name: "Coolify", store: "Bundled Redis", icon: <Container size={15} /> },
-  { name: "Dokploy", store: "Bundled Redis", icon: <Container size={15} /> },
-  { name: "Docker / VPS", store: "Any Redis", icon: <Container size={15} /> },
+  { name: "Vercel", store: "Upstash Redis", icon: <Vercel size={14} /> },
+  { name: "Cloudflare", store: "Workers KV", icon: <Cloudflare size={18} /> },
+  { name: "Railway", store: "Managed Redis", icon: <Railway size={18} /> },
+  { name: "Render", store: "Key Value", icon: <Render size={16} /> },
+  { name: "Coolify", store: "Bundled Redis", icon: <Coolify size={15} /> },
+  { name: "Dokploy", store: "Bundled Redis", icon: <Dokploy size={18} /> },
+  { name: "Docker / VPS", store: "Any Redis", icon: <Docker size={18} /> },
 ];
 
 function DeployAnywhere() {
