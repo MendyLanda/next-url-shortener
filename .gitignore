@@ -20,6 +20,8 @@
 /dist/
 # Tailwind CLI output (built from src/styles/globals.css)
 /public/assets/
+# esbuild-bundled Vercel entry (built by `vercel-build` from src/app.tsx)
+/src/_bundle.js
 # scratch dir for local Vercel-runtime simulation
 /.vtest/
 
