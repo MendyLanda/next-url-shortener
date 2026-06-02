@@ -18,8 +18,12 @@
 /out/
 /build
 /dist/
-# Tailwind CLI output (built from src/styles/globals.css)
-/public/assets/
+# Tailwind CLI output (built from src/styles/globals.css). The compiled CSS is
+# committed because Vercel's Hono preset builds its static manifest from the git
+# tree, not from post-build output — a gitignored build artifact in public/ would
+# 404 on Vercel. Regenerate with `pnpm build:css` after changing markup/styles.
+/public/assets/*
+!/public/assets/styles.css
 # esbuild-bundled Vercel entry (built by `vercel-build` from src/app.tsx)
 /src/_bundle.js
 # scratch dir for local Vercel-runtime simulation
