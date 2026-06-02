@@ -1,17 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "pnpm build:css",
-  "outputDirectory": "public",
   "crons": [
     {
       "path": "/api/keepalive",
       "schedule": "0 7 * * *"
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/api"
     }
   ]
 }

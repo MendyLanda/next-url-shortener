@@ -251,7 +251,8 @@ Worker on `workerd` via `wrangler dev` (with a local KV namespace).
   logout/unlock are plain form `POST`s (`src/routes/`); a small progressive-
   enhancement script (`public/app.js`) adds copy, show-password, and clipboard
   niceties. One app runs on all hosts via thin entrypoints: `src/worker.ts`
-  (Cloudflare), `src/node.ts` (Node/Docker), `api/index.ts` (Vercel).
+  (Cloudflare), `src/node.ts` (Node/Docker), `src/index.ts` (Vercel — detected
+  by Vercel's zero-config Hono preset, which turns the app into a Function).
 - **Cloudflare** — runs natively as a Worker (`src/worker.ts`, `wrangler.jsonc`);
   the `CUT_KV` binding is read off the request `env` via Hono's context storage
   (`hono/context-storage`), so `lib/store` stays the same across hosts.
